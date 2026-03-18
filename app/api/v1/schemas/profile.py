@@ -11,8 +11,8 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 class LocationPoint(BaseModel):
     """Geographic point with latitude and longitude."""
 
-    lat: float = Field(ge=-90, le=90)
-    lon: float = Field(ge=-180, le=180)
+    lat: float = Field(ge=-90, le=90, description="Latitude")
+    lon: float = Field(ge=-180, le=180, description="Longitude")
 
 
 class ProfileUpdateRequest(BaseModel):
@@ -20,13 +20,19 @@ class ProfileUpdateRequest(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    name: str | None = Field(None, min_length=1, max_length=100)
-    bio: str | None = Field(None, max_length=500)
-    city: str | None = Field(None, max_length=100)
-    telegram: str | None = Field(None, pattern=r"^@?[a-zA-Z0-9_]{4,32}$")
-    instagram: str | None = Field(None, pattern=r"^@?[a-zA-Z][a-zA-Z0-9._]{0,29}$")
-    avatar_url: AnyHttpUrl | None = None
-    location: WKTElement | None = None
+    name: str | None = Field(None, min_length=1, max_length=100, description="Display name")
+    bio: str | None = Field(None, max_length=500, description="Short bio")
+    city: str | None = Field(None, max_length=100, description="City of residence")
+    telegram: str | None = Field(
+        None, pattern=r"^@?[a-zA-Z0-9_]{4,32}$", description="Telegram handle (with or without @)",
+    )
+    instagram: str | None = Field(
+        None,
+        pattern=r"^@?[a-zA-Z][a-zA-Z0-9._]{0,29}$",
+        description="Instagram handle (with or without @)",
+    )
+    avatar_url: AnyHttpUrl | None = Field(None, description="Public URL of profile avatar")
+    location: WKTElement | None = Field(None, description="User's current location as {lat, lon}")
 
     @field_validator("telegram", "instagram", mode="before")
     @classmethod
