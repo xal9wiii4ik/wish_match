@@ -54,6 +54,7 @@ class TestPatchProfile:
                 "telegram": "@bob_tg",
                 "gender": "female",
                 "location": {"lat": 55.7558, "lon": 37.6173},
+                "email": "some@mail.com"
             },
         )
 
