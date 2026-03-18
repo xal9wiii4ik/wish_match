@@ -1,14 +1,23 @@
 """User ORM model."""
 
+import enum
 import uuid
 from datetime import datetime
 
 from geoalchemy2 import Geography
 from sqlalchemy import Boolean, DateTime, Text, func
+from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
+
+
+class Gender(str, enum.Enum):
+    """User gender."""
+
+    male = "male"
+    female = "female"
 
 
 class User(Base):
@@ -26,5 +35,8 @@ class User(Base):
     location = mapped_column(Geography("POINT", srid=4326), nullable=True)
     telegram: Mapped[str | None] = mapped_column(Text, nullable=True)
     instagram: Mapped[str | None] = mapped_column(Text, nullable=True)
+    gender: Mapped[Gender | None] = mapped_column(
+        SQLAlchemyEnum(Gender, name="gender_enum"), nullable=True
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

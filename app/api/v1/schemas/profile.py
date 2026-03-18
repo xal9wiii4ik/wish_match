@@ -7,6 +7,8 @@ from geoalchemy2 import WKTElement
 from geoalchemy2.shape import to_shape
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
+from app.models.user import Gender
+
 
 class LocationPoint(BaseModel):
     """Geographic point with latitude and longitude."""
@@ -32,6 +34,7 @@ class ProfileUpdateRequest(BaseModel):
         description="Instagram handle (with or without @)",
     )
     avatar_url: AnyHttpUrl | None = Field(None, description="Public URL of profile avatar")
+    gender: Gender | None = Field(None, description="User gender")
     location: WKTElement | None = Field(None, description="User's current location as {lat, lon}")
 
     @field_validator("telegram", "instagram", mode="before")
@@ -64,6 +67,7 @@ class ProfileResponse(BaseModel):
     telegram: str | None
     instagram: str | None
     avatar_url: str | None
+    gender: Gender | None
     location: LocationPoint | None
     created_at: datetime
 
