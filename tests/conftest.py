@@ -2,7 +2,6 @@
 
 import asyncio
 import os
-from unittest.mock import AsyncMock, patch
 
 import pytest
 import pytest_asyncio
@@ -88,14 +87,10 @@ async def async_client(db_session):
 
     fastapi_app.dependency_overrides[get_db] = _override_get_db
 
-    with patch(
-        "app.api.v1.handlers.auth.send_confirmation_email", new_callable=AsyncMock
-    ) as mock_email:
-        async with AsyncClient(
-            transport=ASGITransport(app=fastapi_app),
-            base_url="http://test",
-        ) as client:
-            client.mock_email = mock_email  # type: ignore[attr-defined]
-            yield client
+    async with AsyncClient(
+        transport=ASGITransport(app=fastapi_app),
+        base_url="http://test",
+    ) as client:
+        yield client
 
     fastapi_app.dependency_overrides.clear()

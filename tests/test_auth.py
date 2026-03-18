@@ -1,6 +1,7 @@
-"""Integration tests for /v1/auth endpoints — real DB, mock only SMTP."""
+"""Integration tests for /v1/auth endpoints — real DB, mock only SMTP transport."""
 
 from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy import select
@@ -13,8 +14,9 @@ from app.models.user import User
 class TestRegister:
     """POST /v1/auth/register"""
 
-    async def test_success(self, async_client, db_session: AsyncSession) -> None:
-        """Register creates inactive user and triggers confirmation email."""
+    @patch("aiosmtplib.send", new_callable=AsyncMock)
+    async def test_success(self, mock_send, async_client, db_session: AsyncSession) -> None:
+        """Register creates inactive user and sends confirmation email."""
         resp = await async_client.post(
             "/v1/auth/register",
             json={"email": "alice@example.com", "password": "securepass1", "name": "Alice"},
@@ -29,9 +31,10 @@ class TestRegister:
         user = result.scalar_one()
         assert user.is_active is False
         assert user.name == "Alice"
-        async_client.mock_email.assert_called_once()
+        mock_send.assert_called_once()
 
-    async def test_duplicate_email(self, async_client) -> None:
+    @patch("aiosmtplib.send", new_callable=AsyncMock)
+    async def test_duplicate_email(self, mock_send, async_client) -> None:
         """Second registration with same email returns 409."""
         payload = {"email": "dup@example.com", "password": "securepass1", "name": "Bob"}
         await async_client.post("/v1/auth/register", json=payload)
@@ -60,11 +63,21 @@ class TestRegister:
         )
         assert resp.status_code == 422
 
+    @patch("aiosmtplib.send", new_callable=AsyncMock, side_effect=Exception("Connection refused"))
+    async def test_smtp_failure(self, mock_send, async_client) -> None:
+        """SMTP failure returns 500."""
+        resp = await async_client.post(
+            "/v1/auth/register",
+            json={"email": "fail@example.com", "password": "securepass1", "name": "Fail"},
+        )
+        assert resp.status_code == 500
+
 
 class TestConfirmEmail:
     """GET /v1/auth/confirm-email"""
 
-    async def test_success(self, async_client, db_session: AsyncSession) -> None:
+    @patch("aiosmtplib.send", new_callable=AsyncMock)
+    async def test_success(self, mock_send, async_client, db_session: AsyncSession) -> None:
         """Valid token activates user."""
         await async_client.post(
             "/v1/auth/register",
@@ -97,7 +110,8 @@ class TestConfirmEmail:
         assert resp.status_code == 400
         assert "invalid" in resp.json()["detail"].lower()
 
-    async def test_expired_token(self, async_client, db_session: AsyncSession) -> None:
+    @patch("aiosmtplib.send", new_callable=AsyncMock)
+    async def test_expired_token(self, mock_send, async_client, db_session: AsyncSession) -> None:
         """Expired token returns 400."""
         await async_client.post(
             "/v1/auth/register",
@@ -131,10 +145,11 @@ class TestLogin:
         name: str,
     ) -> None:
         """Register and confirm a user."""
-        await async_client.post(
-            "/v1/auth/register",
-            json={"email": email, "password": password, "name": name},
-        )
+        with patch("aiosmtplib.send", new_callable=AsyncMock):
+            await async_client.post(
+                "/v1/auth/register",
+                json={"email": email, "password": password, "name": name},
+            )
         result = await db_session.execute(
             select(EmailConfirmation).join(User).where(User.email == email)
         )
@@ -171,7 +186,8 @@ class TestLogin:
         assert resp.status_code == 401
         assert "invalid" in resp.json()["detail"].lower()
 
-    async def test_unconfirmed_email(self, async_client) -> None:
+    @patch("aiosmtplib.send", new_callable=AsyncMock)
+    async def test_unconfirmed_email(self, mock_send, async_client) -> None:
         """Login without email confirmation returns 401."""
         await async_client.post(
             "/v1/auth/register",

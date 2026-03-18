@@ -40,6 +40,7 @@ async def register(
         await send_confirmation_email(user.email, confirmation_url)
     except Exception as exc:
         logger.error("Failed to send confirmation email to %s: %s", user.email, exc)
+        raise HTTPException(status_code=500, detail=str(exc))
 
     return MessageResponse(message="Registration successful. Check your email to confirm.")
 
