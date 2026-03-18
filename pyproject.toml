@@ -4,3 +4,39 @@ asyncio_mode = "auto"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "RUF", # ruff-specific
+]
+ignore = [
+    "B008",  # do not perform function calls in default arguments (FastAPI Depends)
+    "B904",  # raise from exc/None in except — intentionally omitted for HTTP exception wrapping
+    "N805",  # first argument of a method should be named 'self' (Pydantic validators)
+    "N818",  # base exception class uses 'Exception' suffix by convention in this project
+    "UP042", # StrEnum migration — kept as str+Enum for SQLAlchemy Enum type compatibility
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+exclude = [
+    "alembic/",
+    ".venv/",
+]
+
+[[tool.mypy.overrides]]
+module = ["geoalchemy2.*", "shapely.*", "aiosmtplib.*"]
+ignore_missing_imports = true

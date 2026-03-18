@@ -2,7 +2,7 @@
 
 import logging
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from passlib.context import CryptContext
 from sqlalchemy import select
@@ -25,9 +25,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-async def register_user(
-    db: AsyncSession, email: str, password: str, name: str
-) -> tuple[User, str]:
+async def register_user(db: AsyncSession, email: str, password: str, name: str) -> tuple[User, str]:
     """Create inactive user and return (user, confirmation_token).
 
     Raises ValueError if email is already taken.
@@ -49,7 +47,7 @@ async def register_user(
     confirmation = EmailConfirmation(
         user_id=user.id,
         token=token,
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
+        expires_at=datetime.now(UTC) + timedelta(hours=24),
     )
     db.add(confirmation)
     await db.commit()
@@ -63,17 +61,15 @@ async def confirm_email(db: AsyncSession, token: str) -> User:
 
     Raises ValueError if token is invalid or expired.
     """
-    result = await db.execute(
-        select(EmailConfirmation).where(EmailConfirmation.token == token)
-    )
+    result = await db.execute(select(EmailConfirmation).where(EmailConfirmation.token == token))
     confirmation = result.scalar_one_or_none()
     if confirmation is None:
         raise ValueError("Invalid confirmation token")
-    if confirmation.expires_at < datetime.now(timezone.utc):
+    if confirmation.expires_at < datetime.now(UTC):
         raise ValueError("Confirmation token expired")
 
-    result = await db.execute(select(User).where(User.id == confirmation.user_id))
-    user = result.scalar_one_or_none()
+    user_result = await db.execute(select(User).where(User.id == confirmation.user_id))
+    user = user_result.scalar_one_or_none()
     if user is None:
         raise ValueError("User not found")
 

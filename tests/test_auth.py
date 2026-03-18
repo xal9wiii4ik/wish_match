@@ -1,9 +1,8 @@
 """Integration tests for /v1/auth endpoints — real DB, mock only SMTP transport."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,9 +24,7 @@ class TestRegister:
         assert resp.status_code == 201
         assert "message" in resp.json()
 
-        result = await db_session.execute(
-            select(User).where(User.email == "alice@example.com")
-        )
+        result = await db_session.execute(select(User).where(User.email == "alice@example.com"))
         user = result.scalar_one()
         assert user.is_active is False
         assert user.name == "Alice"
@@ -96,9 +93,7 @@ class TestConfirmEmail:
         assert resp.status_code == 200
         assert "confirmed" in resp.json()["message"].lower()
 
-        result = await db_session.execute(
-            select(User).where(User.email == "confirm@example.com")
-        )
+        result = await db_session.execute(select(User).where(User.email == "confirm@example.com"))
         user = result.scalar_one()
         assert user.is_active is True
 
@@ -122,7 +117,7 @@ class TestConfirmEmail:
             select(EmailConfirmation).join(User).where(User.email == "expired@example.com")
         )
         confirmation = result.scalar_one()
-        confirmation.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
+        confirmation.expires_at = datetime.now(UTC) - timedelta(hours=1)
         await db_session.flush()
 
         resp = await async_client.get(

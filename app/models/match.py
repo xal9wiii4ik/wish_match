@@ -30,6 +30,4 @@ class Match(Base):
     )
     user1_seen: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
     user2_seen: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

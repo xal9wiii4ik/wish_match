@@ -9,10 +9,9 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from app.database import Base, get_db
-
 # Ensure all models are registered in Base.metadata
 import app.models  # noqa: F401
+from app.database import Base, get_db
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
@@ -29,9 +28,7 @@ def _create_test_db():
 
     async def _setup() -> None:
         """Create wishmatch_test DB if it does not exist, then create tables."""
-        admin_engine = create_async_engine(
-            _ADMIN_DATABASE_URL, isolation_level="AUTOCOMMIT"
-        )
+        admin_engine = create_async_engine(_ADMIN_DATABASE_URL, isolation_level="AUTOCOMMIT")
         async with admin_engine.connect() as conn:
             row = await conn.execute(
                 text("SELECT 1 FROM pg_database WHERE datname = 'wishmatch_test'")

@@ -39,6 +39,4 @@ class Block(Base):
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     screenshot_urls: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
