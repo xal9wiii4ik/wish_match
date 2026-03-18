@@ -1,4 +1,4 @@
-.PHONY: test test-cov up down logs shell migrate
+.PHONY: test test-cov up down logs shell migrate lint typecheck
 
 up:
 	docker-compose up -d --build
@@ -20,3 +20,14 @@ test:
 
 test-cov:
 	docker-compose exec app python -m pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=html:htmlcov
+
+lint:
+	ruff check app/ tests/
+	ruff format --check app/ tests/
+
+lint-fix:
+	ruff check --fix app/ tests/
+	ruff format app/ tests/
+
+typecheck:
+	mypy app/

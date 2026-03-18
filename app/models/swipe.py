@@ -24,6 +24,4 @@ class Swipe(Base):
         UUID(as_uuid=True), ForeignKey("wishes.id", ondelete="CASCADE"), nullable=False
     )
     is_like: Mapped[bool] = mapped_column(Boolean, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
