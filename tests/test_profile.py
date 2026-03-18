@@ -52,6 +52,7 @@ class TestPatchProfile:
                 "name": "Bobby",
                 "bio": "Hello!",
                 "telegram": "@bob_tg",
+                "gender": "female",
                 "location": {"lat": 55.7558, "lon": 37.6173},
             },
         )
@@ -61,6 +62,7 @@ class TestPatchProfile:
         assert data["name"] == "Bobby"
         assert data["bio"] == "Hello!"
         assert data["telegram"] == "bob_tg"
+        assert data["gender"] == "female"
         assert data["email"] == "patch@example.com"
         loc = data["location"]
         assert abs(loc["lat"] - 55.7558) < 0.0001
