@@ -2,7 +2,6 @@
 
 import logging
 
-from geoalchemy2 import WKTElement
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
@@ -16,17 +15,6 @@ async def update_profile(db: AsyncSession, user: User, data: dict) -> User:
     Raises ValueError("contact_required") if both telegram and instagram
     would become empty after the update.
     """
-    if data.get("telegram"):
-        data["telegram"] = data["telegram"].lstrip("@") or None
-    if data.get("instagram"):
-        data["instagram"] = data["instagram"].lstrip("@") or None
-
-    if "location" in data:
-        loc = data.pop("location")
-        data["location"] = (
-            WKTElement(f"POINT({loc['lon']} {loc['lat']})", srid=4326) if loc else None
-        )
-
     for key, value in data.items():
         setattr(user, key, value)
 
