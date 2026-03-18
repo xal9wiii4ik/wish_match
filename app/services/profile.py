@@ -8,7 +8,6 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
-
 async def update_profile(db: AsyncSession, user: User, data: dict) -> User:
     """Apply partial update to user profile.
 
