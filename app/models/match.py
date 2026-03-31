@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -14,6 +14,9 @@ class Match(Base):
     __tablename__ = "matches"
     __table_args__ = (
         UniqueConstraint("wish_id", "user1_id", "user2_id", name="uq_matches_wish_users"),
+        Index("ix_matches_wish_id", "wish_id"),
+        Index("ix_matches_user1_id", "user1_id"),
+        Index("ix_matches_user2_id", "user2_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
