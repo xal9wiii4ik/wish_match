@@ -9,7 +9,7 @@ from geoalchemy2.functions import ST_DWithin, ST_Distance
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.schemas.wishes import WishCreateRequest, WishUpdateRequest
+from app.api.v1.schemas.wishes import FeedQuery, WishCreateRequest, WishUpdateRequest
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.block import Block
 from app.models.category import Category
@@ -69,16 +69,14 @@ async def list_my_wishes(
 
 async def update_wish(
     db: AsyncSession,
-    wish_id: uuid.UUID,
+    wish: Wish,
     user_id: uuid.UUID,
     data: WishUpdateRequest,
 ) -> Wish:
     """Update a wish. Only the owner can update.
 
-    Raises NotFoundError if wish does not exist.
     Raises ForbiddenError if user is not the owner.
     """
-    wish = await get_wish(db, wish_id)
     if wish.user_id != user_id:
         raise ForbiddenError("not_owner")
 
@@ -89,46 +87,39 @@ async def update_wish(
 
     await db.commit()
     await db.refresh(wish)
-    logger.info("Wish updated: %s", wish_id)
+    logger.info("Wish updated: %s", wish.id)
     return wish
 
 
 async def delete_wish(
     db: AsyncSession,
-    wish_id: uuid.UUID,
+    wish: Wish,
     user_id: uuid.UUID,
 ) -> None:
     """Delete a wish. Only the owner can delete.
 
-    Raises NotFoundError if wish does not exist.
     Raises ForbiddenError if user is not the owner.
     """
-    wish = await get_wish(db, wish_id)
     if wish.user_id != user_id:
         raise ForbiddenError("not_owner")
 
     await db.delete(wish)
     await db.commit()
-    logger.info("Wish deleted: %s", wish_id)
+    logger.info("Wish deleted: %s", wish.id)
 
 
 async def get_feed(
     db: AsyncSession,
     user_id: uuid.UUID,
-    lat: float,
-    lon: float,
-    radius_km: float,
-    category_id: uuid.UUID | None,
-    limit: int,
-    offset: int,
+    q: FeedQuery,
 ) -> tuple[list[Wish], int]:
     """Return nearby wishes excluding own, expired, and blocked users.
 
     Uses ST_DWithin for geo-filtering and ST_Distance for sorting.
     Blocked users are excluded in both directions.
     """
-    point = WKTElement(f"POINT({lon} {lat})", srid=4326)
-    radius_m = radius_km * 1000
+    point = WKTElement(f"POINT({q.lon} {q.lat})", srid=4326)
+    radius_m = q.radius_km * 1000
 
     blocked_ids = select(Block.blocked_id).where(Block.blocker_id == user_id)
     blocker_ids = select(Block.blocker_id).where(Block.blocked_id == user_id)
@@ -142,8 +133,8 @@ async def get_feed(
         Wish.user_id.not_in(blocker_ids),
     ]
 
-    if category_id is not None:
-        filters.append(Wish.category_id == category_id)
+    if q.category_id is not None:
+        filters.append(Wish.category_id == q.category_id)
 
     base = select(Wish).where(and_(*filters))
 
@@ -151,6 +142,6 @@ async def get_feed(
     total = count_result.scalar_one()
 
     result = await db.execute(
-        base.order_by(ST_Distance(Wish.location, point)).limit(limit).offset(offset)
+        base.order_by(ST_Distance(Wish.location, point)).limit(q.limit).offset(q.offset)
     )
     return list(result.scalars().all()), total

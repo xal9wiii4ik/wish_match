@@ -102,6 +102,17 @@ class WishResponse(BaseModel):
         return {"lat": point.y, "lon": point.x}
 
 
+class FeedQuery(BaseModel):
+    """Query parameters for the wish feed endpoint."""
+
+    lat: float = Field(ge=-90, le=90, description="Latitude")
+    lon: float = Field(ge=-180, le=180, description="Longitude")
+    radius_km: float = Field(50, ge=1, le=500, description="Search radius in km")
+    category_id: uuid.UUID | None = Field(None, description="Filter by category")
+    limit: int = Field(20, ge=1, le=100, description="Items per page")
+    offset: int = Field(0, ge=0, description="Items to skip")
+
+
 class WishListResponse(BaseModel):
     """Paginated list of wishes."""
 
