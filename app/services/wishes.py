@@ -13,6 +13,7 @@ from app.api.v1.schemas.wishes import FeedQuery, WishCreateRequest, WishUpdateRe
 from app.exceptions import ForbiddenError, NotFoundError
 from app.models.block import Block
 from app.models.category import Category
+from app.models.match import Match
 from app.models.wish import Wish
 
 logger = logging.getLogger(__name__)
@@ -106,6 +107,17 @@ async def delete_wish(
     await db.delete(wish)
     await db.commit()
     logger.info("Wish deleted: %s", wish.id)
+
+
+async def get_spots_left(db: AsyncSession, wish: Wish) -> int | None:
+    """Return remaining spots for a wish, or None if not active."""
+    if wish.status != "active":
+        return None
+    result = await db.execute(
+        select(func.count()).select_from(Match).where(Match.wish_id == wish.id),
+    )
+    match_count: int = result.scalar_one()
+    return max(0, wish.max_participants - match_count)
 
 
 async def get_feed(

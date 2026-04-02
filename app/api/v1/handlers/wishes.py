@@ -23,6 +23,7 @@ from app.services.wishes import (
     create_wish,
     delete_wish,
     get_feed,
+    get_spots_left,
     list_my_wishes,
     update_wish,
 )
@@ -78,9 +79,13 @@ async def get_feed_endpoint(
 async def get_wish_endpoint(
     wish: Wish = Depends(get_wish_or_404),
     user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ) -> WishResponse:
-    """Return a single wish by ID."""
-    return WishResponse.model_validate(wish)
+    """Return a single wish by ID with remaining spots."""
+    spots_left = await get_spots_left(db, wish=wish)
+    response = WishResponse.model_validate(wish)
+    response.spots_left = spots_left
+    return response
 
 
 @router.patch("/{wish_id}", response_model=WishResponse)
