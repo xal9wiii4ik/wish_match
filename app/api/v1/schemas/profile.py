@@ -7,14 +7,8 @@ from geoalchemy2 import WKTElement
 from geoalchemy2.shape import to_shape
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
+from app.api.v1.schemas.common import LocationPoint
 from app.models.user import Gender
-
-
-class LocationPoint(BaseModel):
-    """Geographic point with latitude and longitude."""
-
-    lat: float = Field(ge=-90, le=90, description="Latitude")
-    lon: float = Field(ge=-180, le=180, description="Longitude")
 
 
 class ProfileUpdateRequest(BaseModel):

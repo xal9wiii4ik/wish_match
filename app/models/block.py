@@ -4,7 +4,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, Text, UniqueConstraint, func
+from sqlalchemy import CheckConstraint, DateTime, Enum, ForeignKey, Index, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -23,6 +23,8 @@ class Block(Base):
     __table_args__ = (
         UniqueConstraint("blocker_id", "blocked_id", name="uq_blocks_blocker_blocked"),
         CheckConstraint("blocker_id != blocked_id", name="blocks_no_self_block"),
+        Index("ix_blocks_blocker_id", "blocker_id"),
+        Index("ix_blocks_blocked_id", "blocked_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

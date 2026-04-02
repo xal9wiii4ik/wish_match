@@ -1,6 +1,6 @@
 # WishMatch — Database Schema
 
-Schema version: **005**
+Schema version: **006**
 
 ## Extensions
 
@@ -42,7 +42,9 @@ Registered users of the service.
 
 ### categories
 
-Predefined wish categories (e.g. "Food", "Travel").
+Predefined wish categories. Seeded via migration `0006_seed_categories`.
+
+**Initial categories:** food, travel, sport, entertainment, culture, education, outdoor, nightlife.
 
 | Column       | Type        | Nullable | Default             | Notes |
 |--------------|-------------|----------|---------------------|-------|
@@ -115,8 +117,8 @@ Records a user's like or dislike of a wish. Each (user, wish) pair is unique.
 
 **Indexes:**
 - `swipes_pkey` — PRIMARY KEY on `id`
-- `idx_swipes_user_id` — B-tree on `user_id`
-- `idx_swipes_wish_id` — B-tree on `wish_id`
+- `ix_swipes_user_id` — B-tree on `user_id`
+- `ix_swipes_wish_id` — B-tree on `wish_id`
 
 ---
 
@@ -145,9 +147,9 @@ Created when a user likes a wish whose owner also swiped right (mutual interest)
 
 **Indexes:**
 - `matches_pkey` — PRIMARY KEY on `id`
-- `idx_matches_wish_id` — B-tree on `wish_id`
-- `idx_matches_user1_id` — B-tree on `user1_id`
-- `idx_matches_user2_id` — B-tree on `user2_id`
+- `ix_matches_wish_id` — B-tree on `wish_id`
+- `ix_matches_user1_id` — B-tree on `user1_id`
+- `ix_matches_user2_id` — B-tree on `user2_id`
 
 ---
 
@@ -176,8 +178,8 @@ Allows a user to block another user. Blocks are one-directional.
 
 **Indexes:**
 - `blocks_pkey` — PRIMARY KEY on `id`
-- `idx_blocks_blocker_id` — B-tree on `blocker_id`
-- `idx_blocks_blocked_id` — B-tree on `blocked_id`
+- `ix_blocks_blocker_id` — B-tree on `blocker_id`
+- `ix_blocks_blocked_id` — B-tree on `blocked_id`
 
 ---
 
