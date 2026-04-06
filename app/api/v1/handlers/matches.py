@@ -4,6 +4,7 @@ import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas.matches import MatchListResponse, MatchResponse, UnseenCountResponse
@@ -11,29 +12,13 @@ from app.api.v1.schemas.wishes import WishResponse
 from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.exceptions import ForbiddenError, NotFoundError
-from app.models.match import Match
 from app.models.user import User
+from app.models.wish import Wish
 from app.services.swipes import get_match, get_unseen_count, list_matches, mark_match_seen
 from app.services.wishes import get_wish
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/matches", tags=["matches"])
-
-
-def _build_match_response(match: Match, user_id: uuid.UUID, wish_response: WishResponse) -> MatchResponse:
-    """Build MatchResponse with computed fields for the requesting user."""
-    partner_id = match.user2_id if match.user1_id == user_id else match.user1_id
-    is_seen = match.user1_seen if match.user1_id == user_id else match.user2_seen
-    return MatchResponse(
-        id=match.id,
-        wish_id=match.wish_id,
-        wish=wish_response,
-        user1_id=match.user1_id,
-        user2_id=match.user2_id,
-        partner_id=partner_id,
-        is_seen=is_seen,
-        created_at=match.created_at,
-    )
 
 
 @router.get("", response_model=MatchListResponse)
@@ -48,11 +33,22 @@ async def list_matches_endpoint(
     items, total = await list_matches(
         db, user_id=user.id, limit=limit, offset=offset, wish_id=wish_id,
     )
-    responses = []
-    for match in items:
-        wish = await get_wish(db, wish_id=match.wish_id)
-        wish_resp = WishResponse.model_validate(wish)
-        responses.append(_build_match_response(match=match, user_id=user.id, wish_response=wish_resp))
+
+    wish_ids = {m.wish_id for m in items}
+    if wish_ids:
+        result = await db.execute(select(Wish).where(Wish.id.in_(wish_ids)))
+        wishes_by_id = {w.id: w for w in result.scalars().all()}
+    else:
+        wishes_by_id = {}
+
+    responses = [
+        MatchResponse.from_match(
+            match=match,
+            user_id=user.id,
+            wish=WishResponse.model_validate(wishes_by_id[match.wish_id]),
+        )
+        for match in items
+    ]
     return MatchListResponse(items=responses, total=total)
 
 
@@ -81,8 +77,9 @@ async def get_match_endpoint(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
 
     wish = await get_wish(db, wish_id=match.wish_id)
-    wish_resp = WishResponse.model_validate(wish)
-    return _build_match_response(match=match, user_id=user.id, wish_response=wish_resp)
+    return MatchResponse.from_match(
+        match=match, user_id=user.id, wish=WishResponse.model_validate(wish),
+    )
 
 
 @router.patch("/{match_id}/seen", response_model=MatchResponse)
@@ -100,5 +97,6 @@ async def mark_match_seen_endpoint(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
 
     wish = await get_wish(db, wish_id=match.wish_id)
-    wish_resp = WishResponse.model_validate(wish)
-    return _build_match_response(match=match, user_id=user.id, wish_response=wish_resp)
+    return MatchResponse.from_match(
+        match=match, user_id=user.id, wish=WishResponse.model_validate(wish),
+    )
