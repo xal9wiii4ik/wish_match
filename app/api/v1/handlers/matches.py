@@ -15,7 +15,6 @@ from app.exceptions import ForbiddenError, NotFoundError
 from app.models.user import User
 from app.models.wish import Wish
 from app.services.swipes import get_match, get_unseen_count, list_matches, mark_match_seen
-from app.services.wishes import get_wish
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/matches", tags=["matches"])
@@ -76,9 +75,8 @@ async def get_match_endpoint(
     except ForbiddenError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
 
-    wish = await get_wish(db, wish_id=match.wish_id)
     return MatchResponse.from_match(
-        match=match, user_id=user.id, wish=WishResponse.model_validate(wish),
+        match=match, user_id=user.id, wish=WishResponse.model_validate(match.wish),
     )
 
 
@@ -96,7 +94,6 @@ async def mark_match_seen_endpoint(
     except ForbiddenError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
 
-    wish = await get_wish(db, wish_id=match.wish_id)
     return MatchResponse.from_match(
-        match=match, user_id=user.id, wish=WishResponse.model_validate(wish),
+        match=match, user_id=user.id, wish=WishResponse.model_validate(match.wish),
     )

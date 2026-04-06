@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.models.block import Block
@@ -85,12 +86,14 @@ async def get_match(
     match_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> Match:
-    """Return a match by ID. Only participants can access.
+    """Return a match by ID with wish eagerly loaded. Only participants can access.
 
     Raises NotFoundError if match does not exist.
     Raises ForbiddenError("not_participant") if user is not a participant.
     """
-    result = await db.execute(select(Match).where(Match.id == match_id))
+    result = await db.execute(
+        select(Match).where(Match.id == match_id).options(selectinload(Match.wish)),
+    )
     match = result.scalar_one_or_none()
     if match is None:
         raise NotFoundError("match_not_found")
