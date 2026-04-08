@@ -3,7 +3,7 @@
 import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +11,6 @@ from app.api.v1.schemas.matches import MatchListResponse, MatchResponse, UnseenC
 from app.api.v1.schemas.wishes import WishResponse
 from app.auth.dependencies import get_current_user
 from app.database import get_db
-from app.exceptions import ForbiddenError, NotFoundError
 from app.models.user import User
 from app.models.wish import Wish
 from app.services.swipes import get_match, get_unseen_count, list_matches, mark_match_seen
@@ -68,13 +67,7 @@ async def get_match_endpoint(
     db: AsyncSession = Depends(get_db),
 ) -> MatchResponse:
     """Return match details. Only participants can access."""
-    try:
-        match = await get_match(db, match_id=match_id, user_id=user.id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except ForbiddenError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
-
+    match = await get_match(db, match_id=match_id, user_id=user.id)
     return MatchResponse.from_match(
         match=match, user_id=user.id, wish=WishResponse.model_validate(match.wish),
     )
@@ -87,13 +80,7 @@ async def mark_match_seen_endpoint(
     db: AsyncSession = Depends(get_db),
 ) -> MatchResponse:
     """Mark a match as seen by the authenticated user."""
-    try:
-        match = await mark_match_seen(db, match_id=match_id, user_id=user.id)
-    except NotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except ForbiddenError as exc:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
-
+    match = await mark_match_seen(db, match_id=match_id, user_id=user.id)
     return MatchResponse.from_match(
         match=match, user_id=user.id, wish=WishResponse.model_validate(match.wish),
     )

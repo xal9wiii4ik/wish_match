@@ -1,11 +1,11 @@
 """Wish handlers: CRUD and feed endpoints."""
 
 import logging
-import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.dependencies import get_wish_or_404
 from app.api.v1.schemas.wishes import (
     FeedQuery,
     WishCreateRequest,
@@ -13,10 +13,8 @@ from app.api.v1.schemas.wishes import (
     WishResponse,
     WishUpdateRequest,
 )
-from app.api.v1.dependencies import get_wish_or_404
 from app.auth.dependencies import get_current_user
 from app.database import get_db
-from app.exceptions import ForbiddenError, NotFoundError
 from app.models.user import User
 from app.models.wish import Wish
 from app.services.wishes import (
@@ -39,10 +37,7 @@ async def create_wish_endpoint(
     db: AsyncSession = Depends(get_db),
 ) -> WishResponse:
     """Create a new wish for the authenticated user."""
-    try:
-        wish = await create_wish(db, user.id, body)
-    except NotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="category_not_found")
+    wish = await create_wish(db, user.id, body)
     return WishResponse.model_validate(wish)
 
 
@@ -96,10 +91,7 @@ async def update_wish_endpoint(
     db: AsyncSession = Depends(get_db),
 ) -> WishResponse:
     """Update an existing wish (only the owner can update)."""
-    try:
-        wish = await update_wish(db, wish, user.id, body)
-    except ForbiddenError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_owner")
+    wish = await update_wish(db, wish, user.id, body)
     return WishResponse.model_validate(wish)
 
 
@@ -110,7 +102,4 @@ async def delete_wish_endpoint(
     db: AsyncSession = Depends(get_db),
 ) -> None:
     """Delete a wish (only the owner can delete)."""
-    try:
-        await delete_wish(db, wish, user.id)
-    except ForbiddenError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_owner")
+    await delete_wish(db, wish, user.id)
