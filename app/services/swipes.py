@@ -32,7 +32,8 @@ async def create_swipe(
     Raises ConflictError("already_swiped") if duplicate swipe.
     """
     wish = await _get_active_wish_or_fail(db, wish_id=wish_id)
-    _validate_not_own_wish(user_id=user_id, wish_owner_id=wish.user_id)
+    if user_id == wish.user_id:
+        raise ValueError("cannot_swipe_own_wish")
     await _check_not_blocked(db, user_id=user_id, other_id=wish.user_id)
     await _check_not_duplicate(db, user_id=user_id, wish_id=wish_id)
 
@@ -45,8 +46,10 @@ async def create_swipe(
         db.add(match)
         await db.flush()
 
-        match_count = await _count_matches_for_wish(db, wish_id=wish.id)
-        if match_count >= wish.max_participants:
+        count_result = await db.execute(
+            select(func.count()).select_from(Match).where(Match.wish_id == wish.id),
+        )
+        if count_result.scalar_one() >= wish.max_participants:
             wish.status = "closed"
 
     await db.commit()
@@ -120,7 +123,6 @@ async def mark_match_seen(
         match.user2_seen = True
 
     await db.commit()
-    await db.refresh(match)
     logger.info("Match %s marked seen by user %s", match_id, user_id)
     return match
 
@@ -150,12 +152,6 @@ async def _get_active_wish_or_fail(db: AsyncSession, wish_id: uuid.UUID) -> Wish
     return wish
 
 
-def _validate_not_own_wish(user_id: uuid.UUID, wish_owner_id: uuid.UUID) -> None:
-    """Raise ValueError if user tries to swipe their own wish."""
-    if user_id == wish_owner_id:
-        raise ValueError("cannot_swipe_own_wish")
-
-
 async def _check_not_blocked(
     db: AsyncSession, user_id: uuid.UUID, other_id: uuid.UUID,
 ) -> None:
@@ -182,11 +178,3 @@ async def _check_not_duplicate(
     )
     if result.scalar_one_or_none() is not None:
         raise ConflictError("already_swiped")
-
-
-async def _count_matches_for_wish(db: AsyncSession, wish_id: uuid.UUID) -> int:
-    """Count existing matches for a wish."""
-    result = await db.execute(
-        select(func.count()).select_from(Match).where(Match.wish_id == wish_id),
-    )
-    return result.scalar_one()

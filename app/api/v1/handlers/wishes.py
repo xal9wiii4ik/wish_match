@@ -78,9 +78,9 @@ async def get_wish_endpoint(
 ) -> WishResponse:
     """Return a single wish by ID with remaining spots."""
     spots_left = await get_spots_left(db, wish=wish)
-    response = WishResponse.model_validate(wish)
-    response.spots_left = spots_left
-    return response
+    data = WishResponse.model_validate(wish).model_dump()
+    data["spots_left"] = spots_left
+    return WishResponse(**data)
 
 
 @router.patch("/{wish_id}", response_model=WishResponse)
