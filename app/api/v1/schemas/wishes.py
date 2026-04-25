@@ -90,6 +90,7 @@ class WishResponse(BaseModel):
     status: str
     expires_at: datetime | None
     max_participants: int
+    spots_left: int | None = Field(None, description="Remaining spots (detail view only)")
     created_at: datetime
 
     @field_validator("location", mode="before")

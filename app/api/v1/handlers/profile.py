@@ -2,7 +2,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.schemas.profile import ProfileResponse, ProfileUpdateRequest
@@ -31,8 +31,5 @@ async def update_my_profile(
     data = body.model_dump(exclude_unset=True)
     if "avatar_url" in data and data["avatar_url"] is not None:
         data["avatar_url"] = str(data["avatar_url"])
-    try:
-        user = await update_profile(db, user, data)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    user = await update_profile(db, user, data)
     return ProfileResponse.model_validate(user)
