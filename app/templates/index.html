@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WishMatch - Исполни мечту</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="twinkling"></div>
+    
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <span class="logo-icon">✨</span>
+                <span class="logo-text">WishMatch</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Возможности</a>
+                <a href="#about" class="nav-link">О нас</a>
+                <button class="btn btn-primary" onclick="showAuthModal()">Войти</button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title animate-fade-in">
+                    Превращай желания в реальность
+                </h1>
+                <p class="hero-subtitle animate-fade-in-delay">
+                    WishMatch - платформа, где мечты встречаются с возможностями. 
+                    Находи единомышленников и исполняй желания вместе!
+                </p>
+                <div class="hero-buttons animate-fade-in-delay-2">
+                    <button class="btn btn-large btn-primary" onclick="startExploring()">
+                        <span>Начать</span>
+                        <span class="btn-icon">🚀</span>
+                    </button>
+                    <button class="btn btn-large btn-secondary" onclick="learnMore()">
+                        Узнать больше
+                    </button>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="users-count">0</div>
+                        <div class="stat-label">Пользователей</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="wishes-count">0</div>
+                        <div class="stat-label">Желаний</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="matches-count">0</div>
+                        <div class="stat-label">Совпадений</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="floating-card card-1">
+                    <div class="card-icon">🎯</div>
+                    <div class="card-text">Найди свою цель</div>
+                </div>
+                <div class="floating-card card-2">
+                    <div class="card-icon">💫</div>
+                    <div class="card-text">Исполни мечту</div>
+                </div>
+                <div class="floating-card card-3">
+                    <div class="card-icon">🤝</div>
+                    <div class="card-text">Найди партнера</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Возможности платформы</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎭</div>
+                    <h3>Умный подбор</h3>
+                    <p>Алгоритмы машинного обучения находят людей с похожими желаниями</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Геолокация</h3>
+                    <p>Находи единомышленников рядом с тобой</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Живое общение</h3>
+                    <p>Обменивайся идеями и планируй встречи</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Безопасность</h3>
+                    <p>Твои данные защищены современными технологиями</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Быстрые матчи</h3>
+                    <p>Мгновенные уведомления о новых совпадениях</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Аналитика</h3>
+                    <p>Отслеживай прогресс исполнения своих желаний</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">О WishMatch</h2>
+                    <p class="about-description">
+                        Мы создали платформу, которая помогает людям находить друг друга 
+                        для исполнения общих желаний и целей. Будь то путешествие, 
+                        новое хобби или бизнес-идея - WishMatch поможет найти идеального партнера.
+                    </p>
+                    <ul class="about-list">
+                        <li>✅ Простая регистрация</li>
+                        <li>✅ Интуитивный интерфейс</li>
+                        <li>✅ Проверенное сообщество</li>
+                        <li>✅ Бесплатное использование</li>
+                    </ul>
+                </div>
+                <div class="about-visual">
+                    <div class="pulse-circle"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            <h2>Добро пожаловать!</h2>
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Вход</button>
+                <button class="auth-tab" onclick="switchTab('register')">Регистрация</button>
+            </div>
+            <div id="login-form" class="auth-form">
+                <input type="email" placeholder="Email" class="form-input">
+                <input type="password" placeholder="Пароль" class="form-input">
+                <button class="btn btn-primary btn-block">Войти</button>
+            </div>
+            <div id="register-form" class="auth-form" style="display: none;">
+                <input type="text" placeholder="Имя" class="form-input">
+                <input type="email" placeholder="Email" class="form-input">
+                <input type="password" placeholder="Пароль" class="form-input">
+                <button class="btn btn-primary btn-block">Зарегистрироваться</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>WishMatch</h4>
+                    <p>Исполняй мечты вместе</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Ссылки</h4>
+                    <a href="/health">API Status</a>
+                    <a href="/docs">Документация</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Контакты</h4>
+                    <p>support@wishmatch.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 WishMatch. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
