@@ -87,6 +87,32 @@ Backend (FastAPI) сейчас реализует только модуль ав
 Координаты передаются явно как `{ latitude, longitude }`. На backend они
 маппятся в PostGIS `POINT(longitude latitude)` (SRID 4326).
 
+## Docker
+
+Фронтенд включён в корневой `docker-compose.yml` как сервис `frontend`
+(multi-stage сборка → nginx):
+
+```bash
+docker compose up --build
+```
+
+- Фронтенд: `http://localhost:3000`
+- Backend (через nginx-прокси `/v1`): тот же origin, проксируется на `app:8000`
+- API напрямую: `http://localhost:8000`
+
+nginx отдаёт SPA (с фолбэком на `index.html`) и проксирует `/v1/*` на backend,
+поэтому CORS в этой конфигурации не нужен. Переменные `VITE_*` зашиваются на
+этапе сборки — переопределяются через `build.args` в compose или
+`--build-arg`.
+
+Для production-сборки образа вручную:
+
+```bash
+docker build -t wishmatch-frontend \
+  --build-arg VITE_USE_MOCKS=false \
+  ./frontend
+```
+
 ## Архитектура
 
 Проект организован по принципу **feature-first**: каждая доменная область
