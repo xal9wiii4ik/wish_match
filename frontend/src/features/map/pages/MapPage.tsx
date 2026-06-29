@@ -2,6 +2,7 @@ import { MapPin } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { env_config } from "@/config/env";
 import { app_routes, build_wish_detail_path } from "@/config/routes";
 import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -10,23 +11,45 @@ import { useCategories } from "@/features/categories/hooks/use-categories";
 import { CategoryFilter } from "@/features/wishes/components/CategoryFilter";
 import { WishCard } from "@/features/wishes/components/WishCard";
 import { useWishFeed } from "@/features/wishes/hooks/use-wishes";
+import {
+  build_category_map,
+  compute_distance_km,
+} from "@/features/wishes/lib/wish-view";
 import type { Wish, WishFeedQuery } from "@/types";
 
 import { WishMap } from "../components/WishMap";
 
+const default_radius_km = 100;
+
 export function MapPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
+  const me_location = user?.location ?? null;
   const [category_id, set_category_id] = useState<string | null>(null);
   const [selected_wish, set_selected_wish] = useState<Wish | null>(null);
 
-  const feed_query = useMemo<WishFeedQuery>(
-    () => (category_id ? { category_id } : {}),
-    [category_id]
-  );
+  const feed_query = useMemo<WishFeedQuery>(() => {
+    const center = me_location ?? {
+      latitude: env_config.default_map_center.lat,
+      longitude: env_config.default_map_center.lng,
+    };
+    return {
+      near: {
+        latitude: center.latitude,
+        longitude: center.longitude,
+        radius_km: default_radius_km,
+      },
+      ...(category_id ? { category_id } : {}),
+    };
+  }, [category_id, me_location]);
 
   const categories_query = useCategories();
   const feed = useWishFeed(feed_query);
+
+  const category_map = useMemo(
+    () => build_category_map(categories_query.data ?? []),
+    [categories_query.data]
+  );
 
   return (
     <div>
@@ -52,7 +75,8 @@ export function MapPage() {
           ) : (
             <WishMap
               wishes={feed.data ?? []}
-              me_location={user?.location ?? null}
+              category_map={category_map}
+              me_location={me_location}
               on_select_wish={set_selected_wish}
               height="100%"
             />
@@ -62,7 +86,12 @@ export function MapPage() {
         <div className="space-y-4">
           {selected_wish ? (
             <>
-              <WishCard wish={selected_wish} compact />
+              <WishCard
+                wish={selected_wish}
+                category={category_map.get(selected_wish.category_id)}
+                distance_km={compute_distance_km(me_location, selected_wish)}
+                compact
+              />
               <Button
                 className="w-full"
                 onClick={() =>

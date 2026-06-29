@@ -1,4 +1,3 @@
-import { haversine_distance_km } from "@/lib/geo";
 import type {
   Block,
   BlockPayload,
@@ -55,18 +54,6 @@ function new_id(): string {
   return crypto.randomUUID();
 }
 
-function with_distance(wish: Wish): Wish {
-  const origin = state.current_user.location;
-  if (!origin) {
-    return { ...wish, distance_km: null };
-  }
-  const distance = haversine_distance_km(origin, {
-    latitude: wish.location.latitude,
-    longitude: wish.location.longitude,
-  });
-  return { ...wish, distance_km: Math.round(distance * 10) / 10 };
-}
-
 export const mock_backend = {
   async register(): Promise<{ message: string }> {
     return delay({
@@ -90,7 +77,10 @@ export const mock_backend = {
     state.current_user = {
       ...state.current_user,
       ...payload,
-      location: payload.location ?? state.current_user.location,
+      location:
+        payload.location !== undefined
+          ? payload.location
+          : state.current_user.location,
     };
     return delay(clone(state.current_user));
   },
@@ -103,25 +93,14 @@ export const mock_backend = {
     let result = state.wishes.filter(
       (wish) => !state.swiped_wish_ids.has(wish.id)
     );
-
     if (query.category_id) {
-      result = result.filter((wish) => wish.category.id === query.category_id);
+      result = result.filter((wish) => wish.category_id === query.category_id);
     }
-
-    if (query.search) {
-      const needle = query.search.toLowerCase();
-      result = result.filter(
-        (wish) =>
-          wish.title.toLowerCase().includes(needle) ||
-          (wish.description ?? "").toLowerCase().includes(needle)
-      );
-    }
-
-    return delay(result.map(with_distance));
+    return delay(clone(result));
   },
 
   async get_my_wishes(): Promise<Wish[]> {
-    return delay(state.my_wishes.map(with_distance));
+    return delay(clone(state.my_wishes));
   },
 
   async get_wish(wish_id: string): Promise<Wish> {
@@ -131,30 +110,22 @@ export const mock_backend = {
     if (!found) {
       throw new Error("Wish not found");
     }
-    return delay(with_distance(found));
+    return delay(clone(found));
   },
 
   async create_wish(payload: WishCreatePayload): Promise<Wish> {
-    const category = state.categories.find(
-      (item) => item.id === payload.category_id
-    );
     const wish: Wish = {
       id: new_id(),
+      user_id: state.current_user.id,
+      category_id: payload.category_id,
       title: payload.title,
       description: payload.description,
-      category: category ?? state.categories[0],
-      owner: {
-        id: state.current_user.id,
-        name: state.current_user.name,
-        avatar_url: state.current_user.avatar_url,
-        city: state.current_user.city,
-      },
       location: payload.location,
       status: "active",
       max_participants: payload.max_participants,
+      spots_left: payload.max_participants,
       expires_at: payload.expires_at,
       created_at: new Date().toISOString(),
-      distance_km: 0,
     };
     state.my_wishes = [wish, ...state.my_wishes];
     return delay(clone(wish));
@@ -169,14 +140,11 @@ export const mock_backend = {
       throw new Error("Wish not found");
     }
     const existing = state.my_wishes[index];
-    const category = payload.category_id
-      ? state.categories.find((item) => item.id === payload.category_id)
-      : existing.category;
     const updated: Wish = {
       ...existing,
       title: payload.title ?? existing.title,
       description: payload.description ?? existing.description,
-      category: category ?? existing.category,
+      category_id: payload.category_id ?? existing.category_id,
       location: payload.location ?? existing.location,
       max_participants: payload.max_participants ?? existing.max_participants,
       expires_at: payload.expires_at ?? existing.expires_at,
@@ -197,28 +165,28 @@ export const mock_backend = {
     const is_match = Boolean(payload.is_like && wish && Math.random() < 0.45);
 
     if (is_match && wish) {
+      const category = state.categories.find(
+        (item) => item.id === wish.category_id
+      );
       const match: Match = {
         id: new_id(),
         wish,
+        partner_id: wish.user_id,
         partner: {
-          id: wish.owner.id,
-          name: wish.owner.name,
-          avatar_url: wish.owner.avatar_url,
-          telegram: "@" + wish.owner.name.split(" ")[0].toLowerCase(),
+          id: wish.user_id,
+          name: category ? `Участник · ${category.name}` : "Участник",
+          avatar_url: null,
+          telegram: "demo_partner",
           instagram: null,
         },
         is_seen: false,
         created_at: new Date().toISOString(),
       };
       state.matches = [match, ...state.matches];
-      return delay({
-        swipe_id: new_id(),
-        is_match: true,
-        match_id: match.id,
-      });
+      return delay({ is_match: true, match_id: match.id });
     }
 
-    return delay({ swipe_id: new_id(), is_match: false, match_id: null });
+    return delay({ is_match: false, match_id: null });
   },
 
   async list_matches(): Promise<Match[]> {

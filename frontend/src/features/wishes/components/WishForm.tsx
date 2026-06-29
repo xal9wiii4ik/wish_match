@@ -57,7 +57,7 @@ export function WishForm({
     defaultValues: {
       title: initial_wish?.title ?? "",
       description: initial_wish?.description ?? "",
-      category_id: initial_wish?.category.id ?? "",
+      category_id: initial_wish?.category_id ?? "",
       max_participants: initial_wish?.max_participants ?? 1,
       expires_at: to_date_input_value(initial_wish?.expires_at ?? null),
       location_name: initial_wish?.location.location_name ?? "",

@@ -1,5 +1,7 @@
 import type { GeoPoint } from "./geo";
 
+export type Gender = "male" | "female";
+
 export interface User {
   id: string;
   email: string;
@@ -10,7 +12,7 @@ export interface User {
   location: GeoPoint | null;
   telegram: string | null;
   instagram: string | null;
-  is_active: boolean;
+  gender: Gender | null;
   created_at: string;
 }
 
@@ -21,5 +23,6 @@ export interface ProfileUpdatePayload {
   avatar_url?: string | null;
   telegram?: string | null;
   instagram?: string | null;
+  gender?: Gender | null;
   location?: GeoPoint | null;
 }

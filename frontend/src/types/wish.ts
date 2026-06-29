@@ -1,5 +1,4 @@
 import type { GeoLocation } from "./geo";
-import type { User } from "./user";
 
 export type WishStatus = "active" | "closed" | "expired";
 
@@ -9,25 +8,18 @@ export interface Category {
   slug: string;
 }
 
-export interface WishOwner {
-  id: string;
-  name: string;
-  avatar_url: string | null;
-  city: string | null;
-}
-
 export interface Wish {
   id: string;
+  user_id: string;
+  category_id: string;
   title: string;
   description: string | null;
-  category: Category;
-  owner: WishOwner;
   location: GeoLocation;
   status: WishStatus;
   max_participants: number;
+  spots_left: number | null;
   expires_at: string | null;
   created_at: string;
-  distance_km: number | null;
 }
 
 export interface WishCreatePayload {
@@ -40,13 +32,12 @@ export interface WishCreatePayload {
 }
 
 export type WishUpdatePayload = Partial<WishCreatePayload> & {
-  status?: WishStatus;
+  status?: "active" | "closed";
 };
 
 export interface WishFeedQuery {
+  near: { latitude: number; longitude: number; radius_km: number };
   category_id?: string;
-  search?: string;
-  near?: { latitude: number; longitude: number; radius_km: number };
+  limit?: number;
+  offset?: number;
 }
-
-export type { User };

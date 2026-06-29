@@ -70,13 +70,13 @@ export function MatchesPage() {
         {active_match ? (
           <div className="flex flex-col items-center gap-4 text-center">
             <Avatar
-              name={active_match.partner.name}
-              src={active_match.partner.avatar_url}
+              name={active_match.partner?.name ?? "Участник"}
+              src={active_match.partner?.avatar_url ?? null}
               size="lg"
             />
             <div>
               <p className="text-lg font-semibold text-white">
-                {active_match.partner.name}
+                {active_match.partner?.name ?? "Участник"}
               </p>
               <p className="text-sm text-slate-400">
                 «{active_match.wish.title}»
@@ -86,30 +86,37 @@ export function MatchesPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-2">
-              {active_match.partner.telegram ? (
-                <a
-                  href={`https://t.me/${active_match.partner.telegram.replace("@", "")}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-brand-500/15 px-4 py-2 text-sm font-medium text-brand-200 hover:bg-brand-500/25"
-                >
-                  <Send className="h-4 w-4" />
-                  Telegram
-                </a>
-              ) : null}
-              {active_match.partner.instagram ? (
-                <a
-                  href={`https://instagram.com/${active_match.partner.instagram}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-accent-500/15 px-4 py-2 text-sm font-medium text-accent-400 hover:bg-accent-500/25"
-                >
-                  <Camera className="h-4 w-4" />
-                  Instagram
-                </a>
-              ) : null}
-            </div>
+            {active_match.partner?.telegram ||
+            active_match.partner?.instagram ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                {active_match.partner.telegram ? (
+                  <a
+                    href={`https://t.me/${active_match.partner.telegram.replace("@", "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-brand-500/15 px-4 py-2 text-sm font-medium text-brand-200 hover:bg-brand-500/25"
+                  >
+                    <Send className="h-4 w-4" />
+                    Telegram
+                  </a>
+                ) : null}
+                {active_match.partner.instagram ? (
+                  <a
+                    href={`https://instagram.com/${active_match.partner.instagram}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-accent-500/15 px-4 py-2 text-sm font-medium text-accent-400 hover:bg-accent-500/25"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Instagram
+                  </a>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500">
+                Контакты участника появятся позже.
+              </p>
+            )}
 
             <Button
               variant="secondary"

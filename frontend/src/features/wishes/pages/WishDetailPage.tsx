@@ -26,6 +26,10 @@ import {
   useUpdateWish,
   useWish,
 } from "../hooks/use-wishes";
+import {
+  build_category_map,
+  compute_distance_km,
+} from "../lib/wish-view";
 
 interface DetailLocationState {
   edit?: boolean;
@@ -68,7 +72,9 @@ export function WishDetailPage() {
   }
 
   const wish = wish_query.data;
-  const is_owner = current_user?.id === wish.owner.id;
+  const is_owner = current_user?.id === wish.user_id;
+  const category_map = build_category_map(categories.data ?? []);
+  const category = category_map.get(wish.category_id);
 
   function handle_update(payload: WishCreatePayload): void {
     update_wish.mutate(payload, {
@@ -141,12 +147,17 @@ export function WishDetailPage() {
       </Button>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <WishCard wish={wish} />
+        <WishCard
+          wish={wish}
+          category={category}
+          distance_km={compute_distance_km(current_user?.location ?? null, wish)}
+        />
 
         <div className="space-y-4">
           <div className="h-56 overflow-hidden rounded-2xl border border-white/10">
             <WishMap
               wishes={[wish]}
+              category_map={category_map}
               me_location={current_user?.location ?? null}
             />
           </div>
@@ -164,7 +175,7 @@ export function WishDetailPage() {
             ) : null}
             <div className="mt-2 flex items-center justify-between">
               <span className="text-slate-500">Категория</span>
-              <Badge tone="brand">{wish.category.name}</Badge>
+              <Badge tone="brand">{category?.name ?? "—"}</Badge>
             </div>
           </div>
 

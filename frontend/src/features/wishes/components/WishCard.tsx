@@ -2,21 +2,30 @@ import { CalendarClock, MapPin, Users } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { format_distance, format_relative_time } from "@/lib/format";
-import { Avatar, Badge } from "@/components/ui";
-import type { Wish } from "@/types";
+import { Badge } from "@/components/ui";
+import type { Category, Wish } from "@/types";
 
 import { get_category_visual } from "../lib/category-visuals";
 
 interface WishCardProps {
   wish: Wish;
+  category?: Category;
+  distance_km?: number | null;
   className?: string;
   compact?: boolean;
 }
 
-export function WishCard({ wish, className, compact = false }: WishCardProps) {
-  const visual = get_category_visual(wish.category.slug);
+export function WishCard({
+  wish,
+  category,
+  distance_km = null,
+  className,
+  compact = false,
+}: WishCardProps) {
+  const visual = get_category_visual(category?.slug);
   const Icon = visual.icon;
-  const distance_label = format_distance(wish.distance_km);
+  const distance_label = format_distance(distance_km);
+  const spots = wish.spots_left ?? wish.max_participants;
 
   return (
     <article
@@ -34,10 +43,14 @@ export function WishCard({ wish, className, compact = false }: WishCardProps) {
       >
         <div className="absolute inset-0 bg-black/10" />
         <div className="relative flex items-start justify-between">
-          <Badge tone="neutral" className="bg-black/30 text-white">
-            <Icon className="h-3.5 w-3.5" />
-            {wish.category.name}
-          </Badge>
+          {category ? (
+            <Badge tone="neutral" className="bg-black/30 text-white">
+              <Icon className="h-3.5 w-3.5" />
+              {category.name}
+            </Badge>
+          ) : (
+            <span />
+          )}
           {distance_label ? (
             <Badge tone="neutral" className="bg-black/30 text-white">
               <MapPin className="h-3.5 w-3.5" />
@@ -69,29 +82,20 @@ export function WishCard({ wish, className, compact = false }: WishCardProps) {
               <MapPin className="h-3.5 w-3.5" />
               {wish.location.location_name}
             </span>
+          ) : wish.location.city ? (
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              {wish.location.city}
+            </span>
           ) : null}
           <span className="inline-flex items-center gap-1">
             <Users className="h-3.5 w-3.5" />
-            до {wish.max_participants}
+            мест: {spots}
           </span>
           <span className="inline-flex items-center gap-1">
             <CalendarClock className="h-3.5 w-3.5" />
             {format_relative_time(wish.created_at)}
           </span>
-        </div>
-
-        <div className="flex items-center gap-2 border-t border-white/5 pt-3">
-          <Avatar name={wish.owner.name} src={wish.owner.avatar_url} size="sm" />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-white">
-              {wish.owner.name}
-            </p>
-            {wish.owner.city ? (
-              <p className="truncate text-xs text-slate-500">
-                {wish.owner.city}
-              </p>
-            ) : null}
-          </div>
         </div>
       </div>
     </article>

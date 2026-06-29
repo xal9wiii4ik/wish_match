@@ -41,9 +41,9 @@ services:
       args:
         # Empty base URL → client calls relative /v1, which nginx proxies to app.
         VITE_API_BASE_URL: ""
-        # Keep demo data on by default: only /v1/auth/* exists on the backend yet.
-        # Set to "false" once the domain endpoints are implemented.
-        VITE_USE_MOCKS: "true"
+        # Talk to the real backend (auth, profile, wishes, swipes, matches,
+        # categories). Set to "true" to run the UI on in-memory demo data.
+        VITE_USE_MOCKS: "false"
     restart: on-failure
     depends_on:
       - app

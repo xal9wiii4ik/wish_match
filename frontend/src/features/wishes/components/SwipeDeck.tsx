@@ -15,14 +15,17 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui";
-import type { Wish } from "@/types";
+import type { Category, GeoPoint, Wish } from "@/types";
 
+import { compute_distance_km } from "../lib/wish-view";
 import { WishCard } from "./WishCard";
 
 export type SwipeDirection = "left" | "right";
 
 interface SwipeDeckProps {
   wishes: Wish[];
+  category_map: Map<string, Category>;
+  me_location?: GeoPoint | null;
   on_swipe: (wish: Wish, is_like: boolean) => void;
   on_restart?: () => void;
 }
@@ -33,7 +36,13 @@ interface SwipeableCardHandle {
 
 const fly_threshold = 120;
 
-export function SwipeDeck({ wishes, on_swipe, on_restart }: SwipeDeckProps) {
+export function SwipeDeck({
+  wishes,
+  category_map,
+  me_location,
+  on_swipe,
+  on_restart,
+}: SwipeDeckProps) {
   const top_card_ref = useRef<SwipeableCardHandle>(null);
 
   const ids_key = useMemo(
@@ -97,6 +106,8 @@ export function SwipeDeck({ wishes, on_swipe, on_restart }: SwipeDeckProps) {
               key={wish.id}
               ref={position === 0 ? top_card_ref : undefined}
               wish={wish}
+              category={category_map.get(wish.category_id)}
+              distance_km={compute_distance_km(me_location, wish)}
               stack_position={position}
               is_interactive={position === 0}
               on_complete={(direction) => handle_complete(wish, direction)}
@@ -128,6 +139,8 @@ export function SwipeDeck({ wishes, on_swipe, on_restart }: SwipeDeckProps) {
 
 interface SwipeableCardProps {
   wish: Wish;
+  category?: Category;
+  distance_km: number | null;
   stack_position: number;
   is_interactive: boolean;
   on_complete: (direction: SwipeDirection) => void;
@@ -136,6 +149,8 @@ interface SwipeableCardProps {
 
 function SwipeableCard({
   wish,
+  category,
+  distance_km,
   stack_position,
   is_interactive,
   on_complete,
@@ -182,7 +197,12 @@ function SwipeableCard({
       onDragEnd={is_interactive ? handle_drag_end : undefined}
     >
       <div className="relative h-full">
-        <WishCard wish={wish} className="h-full" />
+        <WishCard
+          wish={wish}
+          category={category}
+          distance_km={distance_km}
+          className="h-full"
+        />
         {is_interactive ? (
           <>
             <motion.span

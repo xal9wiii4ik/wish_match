@@ -6,7 +6,8 @@ import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 
 import { env_config } from "@/config/env";
 import { format_distance } from "@/lib/format";
-import type { GeoPoint, Wish } from "@/types";
+import { compute_distance_km } from "@/features/wishes/lib/wish-view";
+import type { Category, GeoPoint, Wish } from "@/types";
 
 import { me_marker_icon, wish_marker_icon } from "../lib/markers";
 
@@ -17,6 +18,7 @@ const tile_attribution =
 
 interface WishMapProps {
   wishes: Wish[];
+  category_map?: Map<string, Category>;
   me_location?: GeoPoint | null;
   on_select_wish?: (wish: Wish) => void;
   height?: string;
@@ -55,6 +57,7 @@ function FitToWishes({
 
 export function WishMap({
   wishes,
+  category_map,
   me_location,
   on_select_wish,
   height = "100%",
@@ -83,31 +86,39 @@ export function WishMap({
         </Marker>
       ) : null}
 
-      {wishes.map((wish) => (
-        <Marker
-          key={wish.id}
-          position={[wish.location.latitude, wish.location.longitude]}
-          icon={wish_marker_icon}
-          eventHandlers={{
-            click: () => on_select_wish?.(wish),
-          }}
-        >
-          <Popup>
-            <div className="space-y-1">
-              <p className="font-semibold text-white">{wish.title}</p>
-              <p className="text-xs text-slate-400">
-                {wish.location.location_name ?? wish.location.city ?? ""}
-              </p>
-              <p className="text-xs text-brand-300">{wish.category.name}</p>
-              {wish.distance_km !== null ? (
-                <p className="text-xs text-slate-500">
-                  {format_distance(wish.distance_km)} от вас
+      {wishes.map((wish) => {
+        const category = category_map?.get(wish.category_id);
+        const distance_label = format_distance(
+          compute_distance_km(me_location, wish)
+        );
+        return (
+          <Marker
+            key={wish.id}
+            position={[wish.location.latitude, wish.location.longitude]}
+            icon={wish_marker_icon}
+            eventHandlers={{
+              click: () => on_select_wish?.(wish),
+            }}
+          >
+            <Popup>
+              <div className="space-y-1">
+                <p className="font-semibold text-white">{wish.title}</p>
+                <p className="text-xs text-slate-400">
+                  {wish.location.location_name ?? wish.location.city ?? ""}
                 </p>
-              ) : null}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+                {category ? (
+                  <p className="text-xs text-brand-300">{category.name}</p>
+                ) : null}
+                {distance_label ? (
+                  <p className="text-xs text-slate-500">
+                    {distance_label} от вас
+                  </p>
+                ) : null}
+              </div>
+            </Popup>
+          </Marker>
+        );
+      })}
 
       <FitToWishes wishes={wishes} me_location={me_location} />
     </MapContainer>

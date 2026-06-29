@@ -3,9 +3,9 @@ import { AtSign, Camera, MapPin, Send } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { Button, Field, Input, Textarea } from "@/components/ui";
+import { Button, Field, Input, Select, Textarea } from "@/components/ui";
 import { LocationPicker } from "@/features/map/components/LocationPicker";
-import type { GeoPoint, ProfileUpdatePayload, User } from "@/types";
+import type { Gender, GeoPoint, ProfileUpdatePayload, User } from "@/types";
 
 import { profile_schema, type ProfileFormValues } from "../lib/schemas";
 
@@ -41,6 +41,7 @@ export function ProfileForm({
       city: user.city ?? "",
       telegram: user.telegram ?? "",
       instagram: user.instagram ?? "",
+      gender: user.gender ?? "",
       avatar_url: user.avatar_url ?? "",
     },
   });
@@ -53,6 +54,7 @@ export function ProfileForm({
       telegram: normalize_optional(values.telegram),
       instagram: normalize_optional(values.instagram),
       avatar_url: normalize_optional(values.avatar_url),
+      gender: values.gender ? (values.gender as Gender) : null,
       location,
     });
   }
@@ -82,18 +84,30 @@ export function ProfileForm({
           />
         </Field>
 
-        <Field
-          label="Ссылка на аватар"
-          html_for="avatar_url"
-          error={errors.avatar_url?.message}
-        >
-          <Input
-            id="avatar_url"
-            placeholder="https://…"
-            {...register("avatar_url")}
+        <Field label="Пол" html_for="gender" error={errors.gender?.message}>
+          <Select
+            id="gender"
+            placeholder="Не указан"
+            options={[
+              { value: "male", label: "Мужской" },
+              { value: "female", label: "Женский" },
+            ]}
+            {...register("gender")}
           />
         </Field>
       </div>
+
+      <Field
+        label="Ссылка на аватар"
+        html_for="avatar_url"
+        error={errors.avatar_url?.message}
+      >
+        <Input
+          id="avatar_url"
+          placeholder="https://…"
+          {...register("avatar_url")}
+        />
+      </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Telegram" html_for="telegram" error={errors.telegram?.message}>

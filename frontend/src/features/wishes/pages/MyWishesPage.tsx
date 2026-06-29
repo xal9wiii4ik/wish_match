@@ -12,10 +12,12 @@ import {
   notify,
 } from "@/components/ui";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { useCategories } from "@/features/categories/hooks/use-categories";
 import type { Wish, WishStatus } from "@/types";
 
 import { WishCard } from "../components/WishCard";
 import { useDeleteWish, useMyWishes } from "../hooks/use-wishes";
+import { build_category_map } from "../lib/wish-view";
 
 const status_labels: Record<WishStatus, { label: string; tone: "success" | "neutral" | "warning" }> = {
   active: { label: "Активно", tone: "success" },
@@ -26,8 +28,11 @@ const status_labels: Record<WishStatus, { label: string; tone: "success" | "neut
 export function MyWishesPage() {
   const navigate = useNavigate();
   const wishes = useMyWishes();
+  const categories = useCategories();
   const delete_wish = useDeleteWish();
   const [wish_to_delete, set_wish_to_delete] = useState<Wish | null>(null);
+
+  const category_map = build_category_map(categories.data ?? []);
 
   function confirm_delete(): void {
     if (!wish_to_delete) {
@@ -69,7 +74,11 @@ export function MyWishesPage() {
             return (
               <div key={wish.id} className="space-y-2">
                 <Link to={build_wish_detail_path(wish.id)} className="block">
-                  <WishCard wish={wish} compact />
+                  <WishCard
+                    wish={wish}
+                    category={category_map.get(wish.category_id)}
+                    compact
+                  />
                 </Link>
                 <div className="flex items-center justify-between px-1">
                   <Badge tone={status.tone}>{status.label}</Badge>

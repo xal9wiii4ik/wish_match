@@ -6,21 +6,23 @@ export interface SwipePayload {
 }
 
 export interface SwipeResult {
-  swipe_id: string;
   is_match: boolean;
   match_id: string | null;
+}
+
+export interface MatchPartner {
+  id: string;
+  name: string | null;
+  avatar_url: string | null;
+  telegram: string | null;
+  instagram: string | null;
 }
 
 export interface Match {
   id: string;
   wish: Wish;
-  partner: {
-    id: string;
-    name: string;
-    avatar_url: string | null;
-    telegram: string | null;
-    instagram: string | null;
-  };
+  partner_id: string;
+  partner: MatchPartner | null;
   is_seen: boolean;
   created_at: string;
 }
