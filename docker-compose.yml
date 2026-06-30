@@ -35,5 +35,20 @@ services:
     volumes:
       - .:/app
 
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Empty base URL → client calls relative /v1, which nginx proxies to app.
+        VITE_API_BASE_URL: ""
+        # Talk to the real backend (auth, profile, wishes, swipes, matches,
+        # categories). Set to "true" to run the UI on in-memory demo data.
+        VITE_USE_MOCKS: "false"
+    restart: on-failure
+    depends_on:
+      - app
+    ports:
+      - "3000:80"
+
 volumes:
   pgdata:
