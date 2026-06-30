@@ -4,6 +4,9 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      spacing: {
+        13: "3.25rem",
+      },
       colors: {
         brand: {
           50: "#eef2ff",
